@@ -1,8 +1,5 @@
 defmodule Chat.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
-
   use Application
 
   @impl true
@@ -10,10 +7,8 @@ defmodule Chat.Application do
     children = [
       # Starts a worker by calling: Chat.Worker.start_link(arg)
       # {Chat.Worker, arg}
+      Chat.Supervisor
     ]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
 
     # init ets table @program start -> save state; recover from crashes
     :ets.new(Chat.Store, [:named_table, :public])
