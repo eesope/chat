@@ -17,9 +17,10 @@ defmodule Chat.Server do
     value =
       case :ets.lookup(@store, name) do
         [{^name, v}] -> v
+        _ -> IO.puts("Nickname not set yet.")
       end
+      {:ok, {name, value}}
   end
-
 
 
 
