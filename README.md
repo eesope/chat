@@ -25,7 +25,7 @@ iex(bart@elixir)>
 2. On another terminal:
 $ iex --sname homer
 
-3. Check connection
+3. Test connection
 iex(homer@elixir)> Node.ping(:bart@elixir)
 
 case reply:
