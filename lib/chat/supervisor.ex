@@ -10,6 +10,6 @@ defmodule Chat.Supervisor do
   end
 
   def init(_arg) do
-    DynamicSupervisor.init(strategy: :one_for_one, max_children: 10)
+    DynamicSupervisor.init(strategy: :one_for_one, max_children: 30)
   end
 end

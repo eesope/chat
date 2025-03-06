@@ -37,9 +37,25 @@ defmodule Chat.Server do
     {:reply, Map.keys(state), state}
   end
 
-  def valid_nick?(nick) do
-
+  def handle_call({:msg, sender, recipients, msg}, _from, state) do
+      cond do
+        recipients == "*" ->
+          Enum.each(state, fn {_nick, pid} -> send(pid, {:deliver, sender, msg}) end)
+        true ->
+          recipients_list =
+            recipients
+            |> String.split(",")
+            |> Enum.map(&String.trim/1)
+          Enum.each(recipients_list, fn nick ->
+            if Map.has_key?(state, nick) do
+              send(state[nick], {:deliver, sender, msg})
+            end
+          end)
+      end
+      {:reply, :ok, state}
   end
 
-
+  defp valid_nick?(nick) do
+    String.match?(nick, ~r/^[A-Za-z][A-Za-z0-9]{0,11}$/)
+  end
 end
