@@ -16,21 +16,6 @@ end
 ```
 
 ## Run the program
-Assume machine name is elixir
-
-1. In project folder start server:
-$ iex --sname bart -S mix
-iex(bart@elixir)>
-
-2. On another terminal:
-$ iex --sname homer
-
-3. Test connection
-iex(homer@elixir)> Node.ping(:bart@elixir)
-
-case reply:
-:pong <- success
-:pang <- fail
 
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
