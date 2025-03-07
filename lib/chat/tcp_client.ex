@@ -3,32 +3,35 @@ defmodule TCPClient do
   def connect(host, port) do
     case :gen_tcp.connect(host, port, [:binary, active: false, packet: :line]) do
       {:ok, socket} ->
-        loop(socket)
+        spawn(fn -> listen_loop(socket) end) # to receive asynchronous msg
+        command_loop(socket)
       {:error, reason} ->
         IO.puts("Connection failed: #{inspect(reason)}")
         {:error, reason}
     end
   end
 
-  defp loop(socket) do
+  defp command_loop(socket) do
     case IO.gets("> ") do
       :eof ->
         :gen_tcp.close(socket)
       data ->
         :gen_tcp.send(socket, data)
-        case :gen_tcp.recv(socket, 0, 3000) do
-          {:ok, reply} ->
-            IO.write(reply)
-            loop(socket)
-          {:error, :timeout} ->
-            IO.puts("Error: timeout")
-            loop(socket)
-          {:error, reason} ->
-            IO.puts("Fail to load data: #{inspect(reason)}")
-            :gen_tcp.close(socket)
-      end
+        command_loop(socket)
     end
   end
+
+  defp listen_loop(socket) do
+        case :gen_tcp.recv(socket, 0) do
+          {:ok, msg} ->
+            IO.write(msg)
+            listen_loop(socket)
+          {:error, :closed} ->
+            IO.puts("Socket closed")
+          {:error, reason} ->
+            IO.puts("Fail to receiving data: #{inspect(reason)}")
+      end
+    end
 end
 
 with [host, port | _] <- System.argv(),

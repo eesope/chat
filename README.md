@@ -15,26 +15,31 @@ def deps do
 end
 ```
 
-## Run the program
-
-cd chat
+## Test/Run the program
 
 @terminal1
+cd chat
 iex --sname server -S mix
 
 @terminal2
+cd chat/lib/chat
 iex --sname proxy proxy_server.ex
+
 > Node.ping(:server@macbookpro30)
 
 @terminal3
+cd chat/lib/chat
 elixir clent.ex
+
 > /NICK 1234
 > /NICK bart
 > /MSG * ;;
 > /MSG * hello world
 
 @terminal4
+cd chat/lib/chat
 elixir clent.ex
+
 > /NICK lisa
 > /LIST
 > /MSG * hell world

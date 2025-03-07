@@ -29,7 +29,7 @@ defmodule Chat.Server do
     end
   end
 
-  #handle /LIST
+  # handle /LIST
   def handle_call(:list, _from, state) do
     {:reply, Map.keys(state), state}
   end
