@@ -10,16 +10,23 @@ defmodule TCPClient do
     end
   end
 
-
   defp loop(socket) do
     case IO.gets("> ") do
       :eof ->
         :gen_tcp.close(socket)
       data ->
         :gen_tcp.send(socket, data)
-        {:ok, reply} = :gen_tcp.recv(socket, 0, 3000)
-        IO.write(reply)
-        loop(socket)
+        case :gen_tcp.recv(socket, 0, 3000) do
+          {:ok, reply} ->
+            IO.write(reply)
+            loop(socket)
+          {:error, :timeout} ->
+            IO.puts("Error: timeout")
+            loop(socket)
+          {:error, reason} ->
+            IO.puts("Fail to load data: #{inspect(reason)}")
+            :gen_tcp.close(socket)
+      end
     end
   end
 end
@@ -29,7 +36,5 @@ with [host, port | _] <- System.argv(),
 do
   TCPClient.connect(String.to_atom(host), port)
 else
-  _ -> TCPClient.connect(:localhost, 6666)
+  _ -> TCPClient.connect(~c"localhost", 6666)
 end
-
-# TCPClient.connect("localhost", 6666)
