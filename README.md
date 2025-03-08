@@ -29,7 +29,7 @@ iex --sname proxy proxy_server.ex
 
 @terminal3
 cd chat/lib/chat
-elixir clent.ex
+elixir tcp_clent.ex
 
 > /NICK 1234
 > /NICK bart

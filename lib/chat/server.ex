@@ -18,12 +18,13 @@ defmodule Chat.Server do
 
   # handle /NICK
   def handle_call({:set_nick, pid, nick}, _from, state) do
-    if valid_nick?(nick) and not Map.has_key?(state, nick) do
+    refine_nick = nick |> String.split(~r/\s+/, parts: 2) |> List.first()
+    if valid_nick?(refine_nick) and not Map.has_key?(state, refine_nick) do
       state = remove_old_nick(state, pid)
       Process.monitor(pid)
-      new_state = Map.put(state, nick, pid)
+      new_state = Map.put(state, refine_nick, pid)
       :ets.insert(@store, {:chat_state, new_state})
-      {:reply, {:ok, nick}, new_state}
+      {:reply, {:ok, refine_nick}, new_state}
     else
       {:reply, {:error, "Nickname invalid or already in use."}, state}
     end
@@ -34,27 +35,30 @@ defmodule Chat.Server do
     {:reply, Map.keys(state), state}
   end
 
+  # handle /MSG
   def handle_call({:msg, sender_pid, recipients, msg}, _from, state) do
-    sender_nick = case Enum.find(state, fn {_nick, pid} -> pid == sender_pid end) do
-      {nick, _} -> nick
-      nil -> "Unknown"
+    case Enum.find(state, fn {_nick, pid} -> pid == sender_pid end) do
+      {sender_nick, _} ->
+        cond do
+          recipients == "*" ->
+            Enum.each(state, fn {_nick, pid} -> send(pid, {:deliver, sender_nick, msg}) end)
+          true ->
+            recipients_list =
+              recipients
+              |> String.split(",")
+              |> Enum.map(&String.trim/1)
+            Enum.each(recipients_list, fn nick ->
+              if Map.has_key?(state, nick) do
+                send(state[nick], {:deliver, sender_nick, msg})
+              end
+            end)
+        end
+        {:reply, :ok, state}
+        nil ->
+          {:reply, {:error, "You need to register a nickname before sending message."}, state}
     end
-    cond do
-      recipients == "*" -> # all recipients
-        Enum.each(state, fn {_nick, pid} -> send(pid, {:deliver, sender_nick, msg}) end)
-      true -> # each recipient
-        recipients_list =
-          recipients
-          |> String.split(",")
-          |> Enum.map(&String.trim/1)
-        Enum.each(recipients_list, fn nick ->
-          if Map.has_key?(state, nick) do
-            send(state[nick], {:deliver, sender_nick, msg})
-          end
-        end)
-    end
-    {:reply, :ok, state}
   end
+
 
   defp valid_nick?(nick) do
     String.match?(nick, ~r/^[A-Za-z][A-Za-z0-9]{0,11}$/)

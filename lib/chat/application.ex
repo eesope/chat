@@ -13,8 +13,15 @@ defmodule Chat.Application do
 
     # init ets table @program start -> save state; recover from crashes
     :ets.new(Chat.Store, [:named_table, :public])
+    :ets.delete_all_objects(Chat.Store)
 
     opts = [strategy: :one_for_one, name: Chat.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  @impl true
+  def stop(_state) do
+    :ets.delete(Chat.Store)
+    :ok
   end
 end

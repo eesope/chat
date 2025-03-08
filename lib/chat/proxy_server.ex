@@ -54,38 +54,30 @@ defmodule Chat.ProxyServer do
   defp parse_command(data, delivery_pid) do
     parts = String.split(data, ~r/\s+/, parts: 2)
     case parts do
+
       [cmd, nick] when cmd in ["/NICK", "/N"]->
         case GenServer.call({:global, Chat.Server}, {:set_nick, delivery_pid, nick}) do
-          {:ok, _} -> "Nickname set to #{nick}"
+          {:ok, refined_nick} -> "Nickname set to #{refined_nick}"
           {:error, reason} -> "Error: #{reason}"
         end
+
       [cmd] when cmd in ["/LIST", "/L"] ->
         nick_list = GenServer.call({:global, Chat.Server}, :list)
         "Nicknames: " <> Enum.join(nick_list, ", ")
+
       [cmd, rest] when cmd in ["/MSG", "/M"]->
         case String.split(rest, ~r/\s+/, parts: 2) do
           [recipients, message] ->
-            _ = GenServer.call({:global, Chat.Server}, {:msg, delivery_pid, recipients, message})
-            "Message sent."
+            case GenServer.call({:global, Chat.Server}, {:msg, delivery_pid, recipients, message}) do
+              :ok -> "Message sent."
+              {:error, reason} -> "Error: #{reason}"
+            end
           _ ->
             "Error: invalid /MSG format"
         end
-      _ ->
-        "Error: invalid command"
+
+      # every other command lines
+      _ -> "Error: invalid command"
     end
   end
-
-  def handle_cast({:register_socket, nick, socket}, state) do
-    new_state = Map.put(state.sockets, nick, socket)
-    {:noreply, %{state | sockets: new_state}}
-  end
-
-  def handle_cast({:deliver, sender, recipient, message}, state) do
-    if Map.has_key?(state.sockets, recipient) do
-      socket = state.sockets[recipient]
-      :gen_tcp.send(socket, "[#{sender}] #{message}\n")
-    end
-    {:noreply, state}
-  end
-
 end
