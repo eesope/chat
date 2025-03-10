@@ -1,6 +1,5 @@
 # Chat
-
-**TODO: Add description**
+Clients each connected via TCP to several proxy servers and eventually connect to a center server.
 
 ## Installation
 
@@ -56,6 +55,10 @@ cd chat/lib/chat
 iex --sname proxy proxy_server.ex
 
 > Node.ping(:server@macbookpro30)
+
+
+# further
+- use Logger
 
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
